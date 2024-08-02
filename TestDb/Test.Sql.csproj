@@ -1,0 +1,44 @@
+﻿<Project Sdk="MSBuild.Sdk.SqlProj/2.7.2">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <SqlServerVersion>Sql150</SqlServerVersion>
+        <RunSqlCodeAnalysis>True</RunSqlCodeAnalysis>
+        <RecoveryMode>Simple</RecoveryMode>
+        <AccelerateBuildsInVisualStudio>false</AccelerateBuildsInVisualStudio>
+        <SuppressMissingDependenciesErrors>true</SuppressMissingDependenciesErrors>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    
+    <PropertyGroup>
+        <!-- Refer to https://github.com/rr-wfm/MSBuild.Sdk.SqlProj#publishing-support for supported publishing options -->
+        <DeployOnPublish>True</DeployOnPublish>
+        <TargetServerName>.</TargetServerName>
+        <TargetDatabaseName>TestChild</TargetDatabaseName>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <None Remove="Stored Procedures\InsertTest.sql" />
+      <None Remove="Views\InsertTest.sql" />
+    </ItemGroup>    
+
+    <ItemGroup>
+        <SqlCmdVariable Include="ParentDatabaseName">
+            <Value>TestParent</Value>
+        </SqlCmdVariable>
+       
+    </ItemGroup>
+
+    <!-- Keep in mind that project will not automatically be built after deleting a file. So after deleting a file, make sure to rebuild -->
+    <ItemGroup>
+        <None Update="**/*.sql">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <DependentUpon>$(MSBuildThisFileFullPath)</DependentUpon>
+        </None>
+    </ItemGroup>
+    
+   
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' &#xD;&#xA;            AND ('$(BuildingInsideVisualStudio)' == 'true' OR '$(PublishDir)' == '')">
+        <Exec WorkingDirectory="$(MSBuildProjectDir)" Command="dotnet publish --no-build --no-dependencies" />
+    </Target>
+</Project>
